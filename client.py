@@ -8,6 +8,7 @@ OFFER_MESSAGE_TYPE = 0x2
 REQUEST_MESSAGE_TYPE = 0x3
 
 def listen_for_offers():
+    print("Client started, listening for offer requests...")
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     udp_socket.bind(('', 13117))
@@ -46,6 +47,13 @@ def udp_transfer(server_ip, udp_port, file_size):
 
 if __name__ == '__main__':
     file_size = int(input("Enter file size in bytes: "))
+    tcp_connections = int(input("Enter number of TCP connections: "))
+    udp_connections = int(input("Enter number of UDP connections: "))
+
     server_ip, udp_port, tcp_port = listen_for_offers()
-    threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size)).start()
-    threading.Thread(target=udp_transfer, args=(server_ip, udp_port, file_size)).start()
+
+    for _ in range(tcp_connections):
+        threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size)).start()
+
+    for _ in range(udp_connections):
+        threading.Thread(target=udp_transfer, args=(server_ip, udp_port, file_size)).start()

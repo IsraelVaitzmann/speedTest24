@@ -41,13 +41,14 @@ def start_server():
     tcp_socket.bind(('', 0))
     tcp_socket.listen(5)
     tcp_port = tcp_socket.getsockname()[1]
+    server_ip = socket.gethostbyname(socket.gethostname())
 
     # Setup UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(('', 0))
     udp_port = udp_socket.getsockname()[1]
 
-    print(f"Server started, listening on TCP: {tcp_port}, UDP: {udp_port}")
+    print(f"Server started, listening on IP address {server_ip}, TCP: {tcp_port}, UDP: {udp_port}")
 
     threading.Thread(target=send_offer_broadcast, args=(udp_port, tcp_port), daemon=True).start()
 
