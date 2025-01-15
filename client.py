@@ -21,26 +21,26 @@ def listen_for_offers():
             return addr[0], udp_port, tcp_port
 
 def tcp_transfer(server_ip, tcp_port, file_size, transfer_id):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((server_ip, tcp_port))
-        request = struct.pack('!IBQ', MAGIC_COOKIE, REQUEST_MESSAGE_TYPE, file_size)
-        s.sendall(request)
-        start_time = time.time()
-        received = 0
-        total_packets = 1
-        try:
-            while True:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((server_ip, tcp_port))
+    s.sendall(struct.pack('!IBQ', MAGIC_COOKIE, REQUEST_MESSAGE_TYPE, file_size))
+    received = 0
+    start_time = time.time()
+    try:
+        while True:
+            try:
                 data = s.recv(1024)
                 if not data:
                     break
                 received += len(data)
-                total_packets += 1
-        except socket.timeout:
-            pass
-        duration = time.time() - start_time
-        speed = (received * 8) / duration
-        packet_loss = ((total_packets * 1024 - received) / (total_packets * 1024)) * 100
-        print(f"TCP transfer #{transfer_id} finished, total time: {duration:.2f} seconds, total speed: {speed:.2f} bits/second, percentage of packets received successfully: {100 - packet_loss:.2f}%")
+            except ConnectionResetError:
+                print(f"Connection was reset by the server during TCP transfer #{transfer_id}")
+                break
+    finally:
+        s.close()
+    duration = time.time() - start_time
+    speed = (received * 8) / duration
+    print(f"TCP transfer #{transfer_id} finished, total time: {duration:.2f} seconds, total speed: {speed:.2f} bits/second")
 
 def udp_transfer(server_ip, udp_port, file_size, transfer_id):
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
