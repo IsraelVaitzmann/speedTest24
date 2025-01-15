@@ -11,7 +11,7 @@ def listen_for_offers():
     print("Client started, listening for offer requests...")
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    udp_socket.bind(('', 13117))
+    udp_socket.bind(('', 59102))
     
     while True:
         data, addr = udp_socket.recvfrom(1024)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         udp_connections = int(input("Enter number of UDP connections: "))
 
         server_ip, udp_port, tcp_port = listen_for_offers()
-
+        print(f"IP: {server_ip}, TCP port: {tcp_port}, UDP: {udp_port}")
         threads = []
         for i in range(tcp_connections):
             t = threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size, i + 1))
