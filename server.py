@@ -47,14 +47,14 @@ def start_server():
 
     # Setup TCP
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_socket.bind(('', 0))
+    tcp_socket.bind(('', tcp_port))
     tcp_socket.listen(5)
     #tcp_port = tcp_socket.getsockname()[1]
     server_ip = get_local_ip()
 
     # Setup UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('', 4500))
+    udp_socket.bind(('', udp_port))
     #udp_port = udp_socket.getsockname()[1]
 
     print(f"Server started, listening on IP address {server_ip}, TCP: {tcp_port}, UDP: {udp_port}")

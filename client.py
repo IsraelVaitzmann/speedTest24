@@ -47,8 +47,8 @@ def udp_transfer(server_ip, udp_port, file_size, transfer_id):
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     request = struct.pack('!IBQ', MAGIC_COOKIE, REQUEST_MESSAGE_TYPE, file_size)
-    udp_socket.sendto(request, (server_ip, udp_port))
     start_time = time.time()
+    udp_socket.sendto(request, (server_ip, udp_port))
     received = 0
     total_packets = 1
     try:
