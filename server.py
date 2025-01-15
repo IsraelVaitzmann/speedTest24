@@ -9,7 +9,7 @@ REQUEST_MESSAGE_TYPE = 0x3
 PAYLOAD_MESSAGE_TYPE = 0x4
 
 def send_offer_broadcast(udp_port, tcp_port):
-    while True:
+    while True : #technically busy wait, can be avoided with scheduling libraries, seems pointless though
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as s:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             offer = struct.pack('!IBHH', MAGIC_COOKIE, OFFER_MESSAGE_TYPE, udp_port, tcp_port)
@@ -31,22 +31,31 @@ def handle_udp_connection(server_socket, client_address, file_size):
     for i in range(segment_count):
         payload = struct.pack('!IBQQ', MAGIC_COOKIE, PAYLOAD_MESSAGE_TYPE, segment_count, i) + b'\x00' * 1024
         server_socket.sendto(payload, client_address)
-
+def get_local_ip():
+    #Simply trying to get local address outputs localhost (127.0.0.1), this is a workaround
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Use Google's public DNS server to establish a connection (doesn't actually send any data)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 def start_server():
-    udp_port = 0
-    tcp_port = 0
+    udp_port = 6666
+    tcp_port = 6667
 
     # Setup TCP
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_socket.bind(('', 0))
     tcp_socket.listen(5)
-    tcp_port = tcp_socket.getsockname()[1]
-    server_ip = socket.gethostbyname(socket.gethostname())
+    #tcp_port = tcp_socket.getsockname()[1]
+    server_ip = get_local_ip()
 
     # Setup UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('', 0))
-    udp_port = udp_socket.getsockname()[1]
+    udp_socket.bind(('', 4500))
+    #udp_port = udp_socket.getsockname()[1]
 
     print(f"Server started, listening on IP address {server_ip}, TCP: {tcp_port}, UDP: {udp_port}")
 

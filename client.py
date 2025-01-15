@@ -57,7 +57,7 @@ if __name__ == '__main__':
         udp_connections = int(input("Enter number of UDP connections: "))
 
         server_ip, udp_port, tcp_port = listen_for_offers()
-
+        print(f"IP: {server_ip}, TCP port: {tcp_port}, UDP: {udp_port}")
         threads = []
         for i in range(tcp_connections):
             t = threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size, i + 1))
