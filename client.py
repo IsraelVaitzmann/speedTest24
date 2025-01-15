@@ -22,10 +22,11 @@ def listen_for_offers():
 
 def tcp_transfer(server_ip, tcp_port, file_size, transfer_id):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    start_time = time.time()
     s.connect((server_ip, tcp_port))
     s.sendall(struct.pack('!IBQ', MAGIC_COOKIE, REQUEST_MESSAGE_TYPE, file_size))
     received = 0
-    start_time = time.time()
+    
     try:
         while True:
             try:
