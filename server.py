@@ -56,5 +56,10 @@ def start_server():
         conn, addr = tcp_socket.accept()
         threading.Thread(target=handle_tcp_connection, args=(conn, addr), daemon=True).start()
 
+        data, client_address = udp_socket.recvfrom(1024)
+        magic, msg_type, file_size = struct.unpack('!IBQ', data)
+        if magic == MAGIC_COOKIE and msg_type == REQUEST_MESSAGE_TYPE:
+            threading.Thread(target=handle_udp_connection, args=(udp_socket, client_address, file_size), daemon=True).start()
+
 if __name__ == '__main__':
     start_server()

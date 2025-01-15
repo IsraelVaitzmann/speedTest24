@@ -20,40 +20,56 @@ def listen_for_offers():
             print(f"Received offer from {addr[0]} on TCP: {tcp_port}, UDP: {udp_port}")
             return addr[0], udp_port, tcp_port
 
-def tcp_transfer(server_ip, tcp_port, file_size):
+def tcp_transfer(server_ip, tcp_port, file_size, transfer_id):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((server_ip, tcp_port))
         s.sendall(f"{file_size}\n".encode())
         start_time = time.time()
         data = s.recv(file_size)
         duration = time.time() - start_time
-        print(f"TCP transfer finished: {len(data)} bytes in {duration:.2f} seconds")
+        speed = (len(data) * 8) / duration
+        print(f"TCP transfer #{transfer_id} finished, total time: {duration:.2f} seconds, total speed: {speed:.2f} bits/second")
 
-def udp_transfer(server_ip, udp_port, file_size):
+def udp_transfer(server_ip, udp_port, file_size, transfer_id):
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     request = struct.pack('!IBQ', MAGIC_COOKIE, REQUEST_MESSAGE_TYPE, file_size)
     udp_socket.sendto(request, (server_ip, udp_port))
     start_time = time.time()
     received = 0
+    total_packets = 0
     try:
         while True:
             data, _ = udp_socket.recvfrom(1024)
             received += len(data)
+            total_packets += 1
     except socket.timeout:
         pass
     duration = time.time() - start_time
-    print(f"UDP transfer finished: {received} bytes in {duration:.2f} seconds")
+    speed = (received * 8) / duration
+    packet_loss = ((total_packets * 1024 - received) / (total_packets * 1024)) * 100
+    print(f"UDP transfer #{transfer_id} finished, total time: {duration:.2f} seconds, total speed: {speed:.2f} bits/second, percentage of packets received successfully: {100 - packet_loss:.2f}%")
 
 if __name__ == '__main__':
-    file_size = int(input("Enter file size in bytes: "))
-    tcp_connections = int(input("Enter number of TCP connections: "))
-    udp_connections = int(input("Enter number of UDP connections: "))
+    while True:
+        file_size = int(input("Enter file size in bytes: "))
+        tcp_connections = int(input("Enter number of TCP connections: "))
+        udp_connections = int(input("Enter number of UDP connections: "))
 
-    server_ip, udp_port, tcp_port = listen_for_offers()
+        server_ip, udp_port, tcp_port = listen_for_offers()
 
-    for _ in range(tcp_connections):
-        threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size)).start()
+        threads = []
+        for i in range(tcp_connections):
+            t = threading.Thread(target=tcp_transfer, args=(server_ip, tcp_port, file_size, i + 1))
+            threads.append(t)
+            t.start()
 
-    for _ in range(udp_connections):
-        threading.Thread(target=udp_transfer, args=(server_ip, udp_port, file_size)).start()
+        for i in range(udp_connections):
+            t = threading.Thread(target=udp_transfer, args=(server_ip, udp_port, file_size, i + 1))
+            threads.append(t)
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        print("All transfers complete, listening to offer requests")
