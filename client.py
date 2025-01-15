@@ -11,7 +11,7 @@ def listen_for_offers():
     print("Client started, listening for offer requests...")
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    udp_socket.bind(('', 13117))
+    udp_socket.bind(('', 6666))
     
     while True:
         data, addr = udp_socket.recvfrom(1024)
